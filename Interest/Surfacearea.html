@@ -17,7 +17,7 @@ body{
   background:var(--bg);
 }
 .container{
-  max-width:1100px;
+  max-width:1200px;
   margin:auto;
   padding:22px;
 }
@@ -27,10 +27,9 @@ body{
   padding:24px;
   box-shadow:0 10px 30px rgba(0,0,0,.08);
 }
-h1{
-  color:var(--primary);
-  margin-top:0;
-}
+h1{color:var(--primary);margin:0}
+small{color:#555}
+
 label{
   font-weight:600;
   margin-top:16px;
@@ -59,9 +58,9 @@ button:hover{opacity:.9}
 
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
   gap:28px;
-  margin-top:28px;
+  margin-top:30px;
 }
 .result{
   font-size:20px;
@@ -75,68 +74,120 @@ button:hover{opacity:.9}
   color:#dc2626;
   font-weight:600;
 }
-small{color:#555}
+.hidden{display:none}
 </style>
 </head>
 
 <body>
 <div class="container">
+
+<div class="card">
+<h1>Surface Area Calculator</h1>
+<small>Accurate surface area for 3D shapes · International standards</small>
+
+<label>Shape</label>
+<select id="shape" onchange="updateFields()">
+  <option value="cube">Cube</option>
+  <option value="cuboid">Cuboid</option>
+  <option value="sphere">Sphere</option>
+  <option value="cylinder">Cylinder</option>
+  <option value="cone">Cone</option>
+  <option value="squarePyramid">Square Pyramid</option>
+  <option value="rectPyramid">Rectangular Pyramid</option>
+  <option value="hemisphere">Hemisphere</option>
+  <option value="triPrism">Triangular Prism</option>
+  <option value="tetrahedron">Tetrahedron</option>
+  <option value="frustum">Frustum (Cone)</option>
+  <option value="hollowCylinder">Hollow Cylinder</option>
+</select>
+
+<label>Unit</label>
+<select id="unit">
+  <option>mm²</option>
+  <option selected>cm²</option>
+  <option>m²</option>
+  <option>in²</option>
+  <option>ft²</option>
+</select>
+
+<div id="inputs"></div>
+
+<button onclick="calculate()">Calculate Surface Area</button>
+<div id="error" class="error"></div>
+</div>
+
+<div class="grid">
   <div class="card">
-    <h1>Surface Area Calculator</h1>
-    <small>Accurate surface area calculation for 3D shapes · International standards</small>
-
-    <label>Shape</label>
-    <select id="shape">
-      <option value="cube">Cube</option>
-    </select>
-
-    <label>Unit</label>
-    <select id="unit">
-      <option value="mm²">mm²</option>
-      <option value="cm²" selected>cm²</option>
-      <option value="m²">m²</option>
-      <option value="in²">in²</option>
-      <option value="ft²">ft²</option>
-      <option value="yd²">yd²</option>
-    </select>
-
-    <label>Side (a)</label>
-    <input type="number" id="a" placeholder="Enter side length" step="any">
-
-    <button onclick="calculate()">Calculate Surface Area</button>
-    <div id="error" class="error"></div>
+    <div class="result" id="output">Surface Area = —</div>
   </div>
-
-  <div class="grid">
-    <div class="card">
-      <div class="result" id="output">Surface Area = —</div>
-    </div>
-    <div class="card">
-      <div class="formula">
-        <b>Formula Used</b><br><br>
-        6a²
-      </div>
-    </div>
+  <div class="card">
+    <div class="formula" id="formula">Formula will appear here</div>
   </div>
 </div>
 
+</div>
+
 <script>
+const pi = Math.PI;
+
+function field(id,label){
+  return `<label>${label}</label><input type="number" id="${id}" step="any">`;
+}
+
+function updateFields(){
+  const s = document.getElementById("shape").value;
+  let f = "";
+  let formula = "";
+
+  if(s==="cube"){ f+=field("a","Side (a)"); formula="6a²"; }
+  if(s==="cuboid"){ f+=field("l","Length");f+=field("w","Width");f+=field("h","Height"); formula="2(lw + lh + wh)"; }
+  if(s==="sphere"){ f+=field("r","Radius (r)"); formula="4πr²"; }
+  if(s==="cylinder"){ f+=field("r","Radius (r)");f+=field("h","Height (h)"); formula="2πr(h + r)"; }
+  if(s==="cone"){ f+=field("r","Radius (r)");f+=field("l","Slant height (l)"); formula="πr(r + l)"; }
+  if(s==="squarePyramid"){ f+=field("a","Base side (a)");f+=field("l","Slant height (l)"); formula="a² + 2al"; }
+  if(s==="rectPyramid"){ f+=field("l","Length");f+=field("w","Width");f+=field("s","Slant height"); formula="lw + s(l + w)"; }
+  if(s==="hemisphere"){ f+=field("r","Radius (r)"); formula="3πr²"; }
+  if(s==="triPrism"){ f+=field("a","Base");f+=field("b","Height");f+=field("l","Length"); formula="(ab) + l(a+b+√(a²+b²))"; }
+  if(s==="tetrahedron"){ f+=field("a","Edge (a)"); formula="√3 a²"; }
+  if(s==="frustum"){ f+=field("R","Big radius (R)");f+=field("r","Small radius (r)");f+=field("l","Slant height (l)"); formula="π(R+r)l + π(R² + r²)"; }
+  if(s==="hollowCylinder"){ f+=field("R","Outer radius");f+=field("r","Inner radius");f+=field("h","Height"); formula="2πh(R+r) + 2π(R²−r²)"; }
+
+  document.getElementById("inputs").innerHTML = f;
+  document.getElementById("formula").innerHTML = "<b>Formula Used</b><br><br>"+formula;
+}
+
+updateFields();
+
+function v(id){ return parseFloat(document.getElementById(id)?.value); }
+
 function calculate(){
-  const a = parseFloat(document.getElementById("a").value);
+  const s = document.getElementById("shape").value;
   const unit = document.getElementById("unit").value;
-  const error = document.getElementById("error");
+  const e = document.getElementById("error");
+  e.innerText = "";
 
-  error.innerText = "";
+  let A;
 
-  if(isNaN(a) || a <= 0){
-    error.innerText = "Please enter a valid side length greater than 0.";
-    document.getElementById("output").innerText = "Surface Area = —";
-    return;
+  try{
+    if(s==="cube") A=6*v("a")**2;
+    if(s==="cuboid") A=2*(v("l")*v("w")+v("l")*v("h")+v("w")*v("h"));
+    if(s==="sphere") A=4*pi*v("r")**2;
+    if(s==="cylinder") A=2*pi*v("r")*(v("h")+v("r"));
+    if(s==="cone") A=pi*v("r")*(v("r")+v("l"));
+    if(s==="squarePyramid") A=v("a")**2+2*v("a")*v("l");
+    if(s==="rectPyramid") A=v("l")*v("w")+v("s")*(v("l")+v("w"));
+    if(s==="hemisphere") A=3*pi*v("r")**2;
+    if(s==="triPrism") A=(v("a")*v("b"))+v("l")*(v("a")+v("b")+Math.hypot(v("a"),v("b")));
+    if(s==="tetrahedron") A=Math.sqrt(3)*v("a")**2;
+    if(s==="frustum") A=pi*(v("R")+v("r"))*v("l")+pi*(v("R")**2+v("r")**2);
+    if(s==="hollowCylinder") A=2*pi*v("h")*(v("R")+v("r"))+2*pi*(v("R")**2-v("r")**2);
+
+    if(!isFinite(A)||A<=0) throw "Invalid";
+    document.getElementById("output").innerText=`Surface Area = ${A.toFixed(6)} ${unit}`;
+  }catch{
+    e.innerText="Please enter all required values correctly.";
+    document.getElementById("output").innerText="Surface Area = —";
   }
-
-  const area = 6 * a * a;
-  document.getElementById("output").innerText =
-    `Surface Area = ${area.toFixed(6)} ${unit}`;
 }
 </script>
 </body>
