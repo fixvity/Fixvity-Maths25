@@ -19,12 +19,12 @@ body{
 .container{
   max-width:1100px;
   margin:auto;
-  padding:20px;
+  padding:22px;
 }
 .card{
   background:var(--card);
   border-radius:var(--radius);
-  padding:20px;
+  padding:24px;
   box-shadow:0 10px 30px rgba(0,0,0,.08);
 }
 h1{
@@ -33,12 +33,12 @@ h1{
 }
 label{
   font-weight:600;
-  margin-top:14px;
+  margin-top:16px;
   display:block;
 }
 input,select{
   width:100%;
-  padding:12px;
+  padding:13px;
   margin-top:6px;
   border-radius:10px;
   border:1px solid #ddd;
@@ -46,8 +46,8 @@ input,select{
 }
 button{
   width:100%;
-  margin-top:20px;
-  padding:14px;
+  margin-top:22px;
+  padding:15px;
   font-size:17px;
   background:var(--primary);
   color:#fff;
@@ -56,19 +56,26 @@ button{
   cursor:pointer;
 }
 button:hover{opacity:.9}
+
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-  gap:20px;
-  margin-top:20px;
+  gap:28px;
+  margin-top:28px;
 }
 .result{
-  font-size:18px;
+  font-size:20px;
   font-weight:700;
 }
-small{
-  color:#555;
+.formula{
+  font-size:16px;
+  color:#444;
 }
+.error{
+  color:#dc2626;
+  font-weight:600;
+}
+small{color:#555}
 </style>
 </head>
 
@@ -79,32 +86,25 @@ small{
     <small>Accurate surface area calculation for 3D shapes · International standards</small>
 
     <label>Shape</label>
-    <select id="shape" onchange="renderInputs()">
+    <select id="shape">
       <option value="cube">Cube</option>
-      <option value="cuboid">Cuboid</option>
-      <option value="sphere">Sphere</option>
-      <option value="hemisphere">Hemisphere</option>
-      <option value="cylinder">Cylinder</option>
-      <option value="cone">Cone</option>
-      <option value="squarePyramid">Square Pyramid</option>
-      <option value="rectangularPyramid">Rectangular Pyramid</option>
-      <option value="triangularPrism">Triangular Prism</option>
-      <option value="rectangularPrism">Rectangular Prism</option>
-      <option value="hollowCylinder">Hollow Cylinder</option>
-      <option value="hollowSphere">Hollow Sphere</option>
     </select>
 
     <label>Unit</label>
     <select id="unit">
-      <option>cm²</option>
-      <option>m²</option>
-      <option>in²</option>
-      <option>ft²</option>
+      <option value="mm²">mm²</option>
+      <option value="cm²" selected>cm²</option>
+      <option value="m²">m²</option>
+      <option value="in²">in²</option>
+      <option value="ft²">ft²</option>
+      <option value="yd²">yd²</option>
     </select>
 
-    <div id="inputs"></div>
+    <label>Side (a)</label>
+    <input type="number" id="a" placeholder="Enter side length" step="any">
 
     <button onclick="calculate()">Calculate Surface Area</button>
+    <div id="error" class="error"></div>
   </div>
 
   <div class="grid">
@@ -112,57 +112,31 @@ small{
       <div class="result" id="output">Surface Area = —</div>
     </div>
     <div class="card">
-      <b>Formula Used</b>
-      <p id="formula">—</p>
+      <div class="formula">
+        <b>Formula Used</b><br><br>
+        6a²
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-const π = Math.PI;
-
-function input(label,id){
-  return `<label>${label}</label><input type="number" id="${id}" step="any">`;
-}
-
-function renderInputs(){
-  const s = shape.value;
-  let html = '';
-  if(s==="cube") html+=input("Side (a)","a");
-  if(s==="cuboid"||s==="rectangularPrism")
-    html+=input("Length (l)","l")+input("Width (w)","w")+input("Height (h)","h");
-  if(s==="sphere"||s==="hemisphere") html+=input("Radius (r)","r");
-  if(s==="cylinder") html+=input("Radius (r)","r")+input("Height (h)","h");
-  if(s==="cone") html+=input("Radius (r)","r")+input("Slant Height (l)","sl");
-  if(s==="squarePyramid") html+=input("Base side (a)","a")+input("Slant height (l)","sl");
-  if(s==="rectangularPyramid") html+=input("Length (l)","l")+input("Width (w)","w")+input("Height (h)","h");
-  if(s==="triangularPrism") html+=input("Perimeter of base (P)","p")+input("Height (h)","h")+input("Base area (A)","A");
-  if(s==="hollowCylinder") html+=input("Outer radius (R)","R")+input("Inner radius (r)","r")+input("Height (h)","h");
-  if(s==="hollowSphere") html+=input("Outer radius (R)","R")+input("Inner radius (r)","r");
-  inputs.innerHTML = html;
-}
-renderInputs();
-
-function v(id){return parseFloat(document.getElementById(id)?.value||0)}
-
 function calculate(){
-  let s=shape.value,A=0,f="";
-  if(s==="cube"){A=6*v("a")**2;f="6a²";}
-  if(s==="cuboid"||s==="rectangularPrism"){A=2*(v("l")*v("w")+v("l")*v("h")+v("w")*v("h"));f="2(lw+lh+wh)";}
-  if(s==="sphere"){A=4*π*v("r")**2;f="4πr²";}
-  if(s==="hemisphere"){A=3*π*v("r")**2;f="3πr²";}
-  if(s==="cylinder"){A=2*π*v("r")*(v("h")+v("r"));f="2πr(h+r)";}
-  if(s==="cone"){A=π*v("r")*(v("r")+v("sl"));f="πr(r+l)";}
-  if(s==="squarePyramid"){A=v("a")**2+2*v("a")*v("sl");f="a²+2al";}
-  if(s==="rectangularPyramid"){
-    A=v("l")*v("w")+v("l")*Math.sqrt(v("h")**2+(v("w")/2)**2)+v("w")*Math.sqrt(v("h")**2+(v("l")/2)**2);
-    f="lw + l√(h²+(w/2)²)+w√(h²+(l/2)²)";
+  const a = parseFloat(document.getElementById("a").value);
+  const unit = document.getElementById("unit").value;
+  const error = document.getElementById("error");
+
+  error.innerText = "";
+
+  if(isNaN(a) || a <= 0){
+    error.innerText = "Please enter a valid side length greater than 0.";
+    document.getElementById("output").innerText = "Surface Area = —";
+    return;
   }
-  if(s==="triangularPrism"){A=v("p")*v("h")+2*v("A");f="Ph + 2A";}
-  if(s==="hollowCylinder"){A=2*π*(v("h")*(v("R")+v("r"))+v("R")**2+v("r")**2);f="2π[h(R+r)+R²+r²]";}
-  if(s==="hollowSphere"){A=4*π*(v("R")**2+v("r")**2);f="4π(R²+r²)";}
-  output.innerText=`Surface Area = ${A.toFixed(6)} ${unit.value}`;
-  formula.innerText=f;
+
+  const area = 6 * a * a;
+  document.getElementById("output").innerText =
+    `Surface Area = ${area.toFixed(6)} ${unit}`;
 }
 </script>
 </body>
