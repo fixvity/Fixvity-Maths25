@@ -12,42 +12,27 @@
   --card:#ffffff;
   --radius:14px;
 }
-
 *{box-sizing:border-box}
-
 body{
   margin:0;
   font-family:Inter,system-ui,Arial;
   background:var(--bg);
 }
-
 .container{
   max-width:1150px;
   margin:auto;
   padding:24px;
 }
-
 .card{
   background:var(--card);
   border-radius:var(--radius);
   padding:30px;
   box-shadow:0 12px 32px rgba(0,0,0,.08);
 }
-
-h1{
-  margin:0 0 6px;
-  color:var(--primary);
-}
-
+h1{margin:0 0 6px;color:var(--primary)}
 small{color:#555}
-
-label{
-  font-weight:600;
-  display:block;
-  margin-top:16px;
-}
-
-input, select{
+label{font-weight:600;display:block;margin-top:16px}
+input,select{
   width:100%;
   padding:14px;
   margin-top:6px;
@@ -55,7 +40,6 @@ input, select{
   border:1px solid #ddd;
   font-size:16px;
 }
-
 button{
   width:100%;
   margin-top:26px;
@@ -68,35 +52,20 @@ button{
   cursor:pointer;
 }
 button:hover{opacity:.92}
-
 .form-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
   gap:20px;
 }
-
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
   gap:26px;
   margin-top:32px;
 }
-
-.result{
-  font-size:20px;
-  font-weight:700;
-}
-
-.formula{
-  font-size:16px;
-  color:#444;
-}
-
-.error{
-  color:#dc2626;
-  font-weight:600;
-  margin-top:12px;
-}
+.result{font-size:20px;font-weight:700}
+.formula{font-size:16px;color:#444}
+.error{color:#dc2626;font-weight:600;margin-top:12px}
 </style>
 </head>
 
@@ -143,113 +112,100 @@ button:hover{opacity:.92}
     <div class="result" id="output">Surface Area = —</div>
   </div>
   <div class="card">
-    <div class="formula" id="formulaBox">
-      <b>Formula Used</b><br><br>—
-    </div>
+    <div class="formula" id="formulaBox"><b>Formula Used</b><br><br>—</div>
   </div>
 </div>
 
 </div>
 
 <script>
-const inputsDiv = document.getElementById("inputs");
+const inputsDiv=document.getElementById("inputs");
+const shape=document.getElementById("shape");
+const unit=document.getElementById("unit");
+const output=document.getElementById("output");
+const formulaBox=document.getElementById("formulaBox");
+const error=document.getElementById("error");
 
-function field(label,id){
-  return `<div><label>${label}</label><input type="number" id="${id}" step="any"></div>`;
+function field(l,i){
+  return `<div><label>${l}</label><input type="number" id="${i}" step="any"></div>`;
 }
 
 function updateFields(){
-  const s = shape.value;
-  inputsDiv.innerHTML = "";
-
-  if(s==="cube") inputsDiv.innerHTML = field("Side (a)","a");
-
-  if(s==="cuboid") inputsDiv.innerHTML =
-    field("Length (l)","l")+field("Width (w)","w")+field("Height (h)","h");
-
-  if(s==="sphere") inputsDiv.innerHTML = field("Radius (r)","r");
-
-  if(s==="cylinder") inputsDiv.innerHTML =
-    field("Radius (r)","r")+field("Height (h)","h");
-
-  if(s==="cone") inputsDiv.innerHTML =
-    field("Radius (r)","r")+field("Slant Height (l)","l");
-
-  if(s==="hemisphere") inputsDiv.innerHTML = field("Radius (r)","r");
-
-  if(s==="squarePyramid") inputsDiv.innerHTML =
-    field("Base side (a)","a")+field("Slant height (l)","l");
-
-  if(s==="rectPyramid") inputsDiv.innerHTML =
-    field("Length (l)","l")+field("Width (w)","w")+field("Height (h)","h");
-
-  if(s==="hollowCylinder") inputsDiv.innerHTML =
-    field("Outer radius (R)","R")+field("Inner radius (r)","r")+field("Height (h)","h");
-
-  if(s==="triangularPrism") inputsDiv.innerHTML =
-    field("Base (b)","b")+field("Height of triangle (h)","h")+field("Length (L)","L");
+  inputsDiv.innerHTML="";
+  switch(shape.value){
+    case"cube": inputsDiv.innerHTML=field("Side (a)","a"); break;
+    case"cuboid": inputsDiv.innerHTML=field("Length (l)","l")+field("Width (w)","w")+field("Height (h)","h"); break;
+    case"sphere": inputsDiv.innerHTML=field("Radius (r)","r"); break;
+    case"cylinder": inputsDiv.innerHTML=field("Radius (r)","r")+field("Height (h)","h"); break;
+    case"cone": inputsDiv.innerHTML=field("Radius (r)","r")+field("Slant Height (l)","sl"); break;
+    case"hemisphere": inputsDiv.innerHTML=field("Radius (r)","r"); break;
+    case"squarePyramid": inputsDiv.innerHTML=field("Base side (a)","a")+field("Slant height (l)","sl"); break;
+    case"rectPyramid": inputsDiv.innerHTML=field("Length (l)","l")+field("Width (w)","w")+field("Height (h)","h"); break;
+    case"hollowCylinder": inputsDiv.innerHTML=field("Outer radius (R)","R")+field("Inner radius (r)","r")+field("Height (h)","h"); break;
+    case"triangularPrism": inputsDiv.innerHTML=field("Base (b)","b")+field("Triangle height (h)","h")+field("Length (L)","L"); break;
+  }
 }
-
 updateFields();
 
 function v(id){
   const n=parseFloat(document.getElementById(id)?.value);
   return isNaN(n)||n<=0?null:n;
 }
+function err(){
+  error.innerText="Please enter all required values greater than 0.";
+  output.innerText="Surface Area = —";
+  formulaBox.innerHTML="<b>Formula Used</b><br><br>—";
+  return;
+}
 
 function calculate(){
   error.innerText="";
   let A=0,f="";
-
   switch(shape.value){
-    case"cube":
-      let a=v("a"); if(!a)return err();
+    case"cube":{
+      const a=v("a"); if(!a)return err();
       A=6*a*a; f="6a²"; break;
-
-    case"cuboid":
-      let l=v("l"),w=v("w"),h=v("h"); if(!l||!w||!h)return err();
+    }
+    case"cuboid":{
+      const l=v("l"),w=v("w"),h=v("h"); if(!l||!w||!h)return err();
       A=2*(l*w+l*h+w*h); f="2(lw + lh + wh)"; break;
-
-    case"sphere":
-      let r=v("r"); if(!r)return err();
+    }
+    case"sphere":{
+      const r=v("r"); if(!r)return err();
       A=4*Math.PI*r*r; f="4πr²"; break;
-
-    case"cylinder":
-      r=v("r"); h=v("h"); if(!r||!h)return err();
+    }
+    case"cylinder":{
+      const r=v("r"),h=v("h"); if(!r||!h)return err();
       A=2*Math.PI*r*(r+h); f="2πr(r+h)"; break;
-
-    case"cone":
-      r=v("r"); l=v("l"); if(!r||!l)return err();
-      A=Math.PI*r*(r+l); f="πr(r+l)"; break;
-
-    case"hemisphere":
-      r=v("r"); if(!r)return err();
+    }
+    case"cone":{
+      const r=v("r"),sl=v("sl"); if(!r||!sl)return err();
+      A=Math.PI*r*(r+sl); f="πr(r+l)"; break;
+    }
+    case"hemisphere":{
+      const r=v("r"); if(!r)return err();
       A=3*Math.PI*r*r; f="3πr²"; break;
-
-    case"squarePyramid":
-      a=v("a"); l=v("l"); if(!a||!l)return err();
-      A=a*a+2*a*l; f="a² + 2al"; break;
-
-    case"rectPyramid":
-      l=v("l"); w=v("w"); h=v("h"); if(!l||!w||!h)return err();
-      A=l*w + l*Math.sqrt((w/2)**2+h**2)*2 + w*Math.sqrt((l/2)**2+h**2)*2;
+    }
+    case"squarePyramid":{
+      const a=v("a"),sl=v("sl"); if(!a||!sl)return err();
+      A=a*a+2*a*sl; f="a² + 2al"; break;
+    }
+    case"rectPyramid":{
+      const l=v("l"),w=v("w"),h=v("h"); if(!l||!w||!h)return err();
+      A=l*w + 2*l*Math.sqrt((w/2)**2+h**2) + 2*w*Math.sqrt((l/2)**2+h**2);
       f="lw + lateral faces"; break;
-
-    case"hollowCylinder":
-      let R=v("R"); r=v("r"); h=v("h"); if(!R||!r||!h||R<=r)return err();
+    }
+    case"hollowCylinder":{
+      const R=v("R"),r=v("r"),h=v("h"); if(!R||!r||!h||R<=r)return err();
       A=2*Math.PI*h*(R+r)+2*Math.PI*(R*R-r*r); f="2πh(R+r)+2π(R²−r²)"; break;
-
-    case"triangularPrism":
-      let b=v("b"); h=v("h"); let L=v("L"); if(!b||!h||!L)return err();
-      A=(b*h)+L*(b+h+Math.sqrt(b*b+h*h)); f="bh + L(perimeter)"; break;
+    }
+    case"triangularPrism":{
+      const b=v("b"),h=v("h"),L=v("L"); if(!b||!h||!L)return err();
+      A=b*h + L*(b+h+Math.sqrt(b*b+h*h)); f="bh + L(b+h+√(b²+h²))"; break;
+    }
   }
-
   output.innerText=`Surface Area = ${A.toFixed(6)} ${unit.value}`;
   formulaBox.innerHTML=`<b>Formula Used</b><br><br>${f}`;
-}
-
-function err(){
-  error.innerText="Please enter all required values greater than 0.";
 }
 </script>
 
